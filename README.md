@@ -46,6 +46,8 @@ assets/
       base.png
     rabbit/
       base.png
+    shiba-inu/
+      base.png
 IMAGE_GUIDE.md
 ```
 

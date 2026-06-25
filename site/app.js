@@ -71,6 +71,15 @@ const animals = [
     alt: "Penguin from behind",
     hitZones: [{ x: 0.5, y: 0.67, rx: 0.24, ry: 0.25 }],
   },
+  {
+    id: "shiba-inu",
+    image: "/assets/animals/shiba-inu/base.png",
+    alt: "Shiba Inu from behind",
+    hitZones: [
+      { x: 0.41, y: 0.64, rx: 0.14, ry: 0.22 },
+      { x: 0.59, y: 0.64, rx: 0.14, ry: 0.22 },
+    ],
+  },
 ];
 
 const stageElement = document.querySelector(".stage");

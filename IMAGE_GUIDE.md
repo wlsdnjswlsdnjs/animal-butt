@@ -50,7 +50,7 @@ Duck/penguin: standing naturally from behind.
 
 ## 앱에 이미지 추가하기
 
-현재 앱에는 10종의 이미지 에셋이 들어가 있습니다.
+현재 앱에는 11종의 이미지 에셋이 들어가 있습니다.
 
 1. `assets/animals/새-id/` 폴더를 만듭니다.
 2. `base.png`를 넣습니다.
