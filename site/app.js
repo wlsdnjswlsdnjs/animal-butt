@@ -88,8 +88,8 @@ const animals = [
     image: "/assets/animals/tiger/base.png",
     alt: "Tiger from behind",
     hitZones: [
-      { x: 0.42, y: 0.5, rx: 0.12, ry: 0.12 },
-      { x: 0.58, y: 0.5, rx: 0.12, ry: 0.12 },
+      { x: 0.4, y: 0.63, rx: 0.14, ry: 0.13 },
+      { x: 0.6, y: 0.63, rx: 0.14, ry: 0.13 },
     ],
     special: "tiger",
     reactions: {
@@ -172,7 +172,7 @@ const app = new Application();
 const touchesToAdvance = 20;
 const defaultPrompt = "Tap butt 20 times. Another butt appears.";
 const tigerPrompts = {
-  back: "WARNING: This butt bites.",
+  back: "WARNING: Do not touch the tiger loaf.",
   glare: "You were warned.",
   roar: "ROAR.",
 };
@@ -457,7 +457,7 @@ async function handleTigerTouch() {
   if (touchCount >= 5) {
     pendingAdvance = true;
     await setTigerReaction("roar");
-    window.setTimeout(advanceAnimal, 1200);
+    window.setTimeout(advanceAnimal, 1500);
   }
 }
 
