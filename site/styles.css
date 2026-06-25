@@ -1,0 +1,62 @@
+:root {
+  color-scheme: light;
+  --bg: #fff;
+  --ink: #1c1a18;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family:
+    ui-rounded,
+    "Apple SD Gothic Neo",
+    "Malgun Gothic",
+    system-ui,
+    sans-serif;
+  overflow: hidden;
+}
+
+.prompt {
+  position: fixed;
+  z-index: 2;
+  top: max(14px, env(safe-area-inset-top));
+  left: 50%;
+  width: min(92vw, 520px);
+  margin: 0;
+  translate: -50% 0;
+  color: rgba(28, 26, 24, 0.58);
+  font-size: clamp(13px, 2.6vw, 16px);
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: 0;
+  text-align: center;
+  pointer-events: none;
+}
+
+.stage {
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+canvas {
+  display: block;
+  width: 100vw;
+  height: 100svh;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}

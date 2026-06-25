@@ -1,0 +1,12 @@
+{
+  "name": "animal-butt",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A tiny squishy animal butt website.",
+  "scripts": {
+    "dev": "node site/dev-server.js"
+  },
+  "dependencies": {
+    "pixi.js": "^8.19.0"
+  }
+}
