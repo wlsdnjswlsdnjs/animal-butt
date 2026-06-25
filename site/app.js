@@ -84,6 +84,20 @@ const animals = [
     ],
   },
   {
+    id: "tiger",
+    image: "/assets/animals/tiger/base.png",
+    alt: "Tiger from behind",
+    hitZones: [
+      { x: 0.42, y: 0.5, rx: 0.12, ry: 0.12 },
+      { x: 0.58, y: 0.5, rx: 0.12, ry: 0.12 },
+    ],
+    special: "tiger",
+    reactions: {
+      glare: "/assets/animals/tiger/glare.png",
+      roar: "/assets/animals/tiger/roar.png",
+    },
+  },
+  {
     id: "red-panda",
     image: "/assets/animals/red-panda/base.png",
     alt: "Red panda from behind",
@@ -153,8 +167,15 @@ const animals = [
 
 const firstAnimalId = "shiba-inu";
 const stageElement = document.querySelector(".stage");
+const promptElement = document.querySelector(".prompt");
 const app = new Application();
 const touchesToAdvance = 20;
+const defaultPrompt = "Tap butt 20 times. Another butt appears.";
+const tigerPrompts = {
+  back: "WARNING: This butt bites.",
+  glare: "You were warned.",
+  roar: "ROAR.",
+};
 const imageCache = new Map();
 
 setStatus("booting");
@@ -172,6 +193,7 @@ let touchCount = 0;
 let isChangingAnimal = false;
 let pendingAdvance = false;
 let remainingAnimalIndices = [];
+let tigerState = "";
 
 await app.init({
   autoDensity: true,
@@ -265,6 +287,8 @@ async function loadAnimalByIndex(nextIndex) {
   stageElement.dataset.animal = nextAnimal.id;
   stageElement.dataset.touches = "0";
   stageElement.dataset.lastHit = "";
+  delete stageElement.dataset.tigerState;
+  stageElement.classList.remove("is-tiger-lunge");
   stageElement.setAttribute("aria-label", nextAnimal.alt);
 
   const image = await loadImage(nextAnimal.image);
@@ -274,7 +298,13 @@ async function loadAnimalByIndex(nextIndex) {
   touchCount = 0;
   pendingAdvance = false;
   impulses = [];
+  tigerState = nextAnimal.special === "tiger" ? "back" : "";
   texture = nextTexture;
+  updatePrompt(nextAnimal);
+
+  if (tigerState) {
+    stageElement.dataset.tigerState = tigerState;
+  }
 
   isChangingAnimal = false;
   setStatus("image-ready");
@@ -301,6 +331,10 @@ function loadImage(src) {
 function preloadRemainingAnimals() {
   for (const preloadAnimal of animals) {
     loadImage(preloadAnimal.image).catch(() => {});
+
+    for (const reactionImage of Object.values(preloadAnimal.reactions || {})) {
+      loadImage(reactionImage).catch(() => {});
+    }
   }
 }
 
@@ -325,8 +359,8 @@ function resizeImage() {
   plane.position.set(imageBounds.x, imageBounds.y);
 }
 
-function handlePress(event) {
-  if (isChangingAnimal) return;
+async function handlePress(event) {
+  if (isChangingAnimal || pendingAdvance) return;
 
   const point = getLocalPoint(event.clientX, event.clientY);
 
@@ -347,6 +381,11 @@ function handlePress(event) {
   stageElement.dataset.lastHit = "butt";
   stageElement.dataset.touches = String(touchCount);
   stageElement.dataset.impulses = String(impulses.length);
+
+  if (getCurrentAnimal()?.special === "tiger") {
+    await handleTigerTouch();
+    return;
+  }
 
   if (touchCount >= touchesToAdvance && !pendingAdvance) {
     pendingAdvance = true;
@@ -370,6 +409,11 @@ function getLocalPoint(clientX, clientY) {
 
 function isInButtHitArea(localX, localY) {
   const animal = animals[currentAnimalIndex];
+
+  if (animal?.special === "tiger" && tigerState && tigerState !== "back") {
+    return true;
+  }
+
   const zones = animal?.hitZones || [];
   const normalizedX = localX / texture.width;
   const normalizedY = localY / texture.height;
@@ -404,6 +448,53 @@ async function advanceAnimal() {
   setStatus("ready");
 }
 
+async function handleTigerTouch() {
+  if (touchCount === 1) {
+    await setTigerReaction("glare");
+    return;
+  }
+
+  if (touchCount >= 5) {
+    pendingAdvance = true;
+    await setTigerReaction("roar");
+    window.setTimeout(advanceAnimal, 1200);
+  }
+}
+
+async function setTigerReaction(nextState) {
+  const animal = getCurrentAnimal();
+
+  if (animal?.special !== "tiger" || tigerState === nextState) return;
+
+  const nextImage = animal.reactions?.[nextState];
+  if (!nextImage) return;
+
+  tigerState = nextState;
+  stageElement.dataset.tigerState = tigerState;
+  updatePrompt(animal);
+
+  const image = await loadImage(nextImage);
+
+  if (getCurrentAnimal()?.special !== "tiger" || tigerState !== nextState) {
+    return;
+  }
+
+  texture = Texture.from(image);
+  plane.texture = texture;
+  impulses = [];
+  positions.set(basePositions);
+  positionBuffer.update();
+  resizeImage();
+  setDebugAnimal(animal);
+  setStatus(`tiger-${nextState}`);
+
+  if (nextState === "roar") {
+    stageElement.classList.remove("is-tiger-lunge");
+    void stageElement.offsetWidth;
+    stageElement.classList.add("is-tiger-lunge");
+  }
+}
+
 function tick(ticker) {
   const deltaSeconds = (ticker.deltaMS || 16.67) / 1000;
 
@@ -428,6 +519,23 @@ function setStatus(status) {
   window.__animalButtStatus = status;
 }
 
+function getCurrentAnimal() {
+  return animals[currentAnimalIndex];
+}
+
+function updatePrompt(animal = getCurrentAnimal()) {
+  if (!promptElement) return;
+
+  if (animal?.special === "tiger") {
+    promptElement.textContent = tigerPrompts[tigerState || "back"];
+    promptElement.classList.add("is-warning");
+    return;
+  }
+
+  promptElement.textContent = defaultPrompt;
+  promptElement.classList.remove("is-warning");
+}
+
 function setDebugAnimal(animal) {
   window.__animalButt = {
     renderer: "pixi",
@@ -435,7 +543,12 @@ function setDebugAnimal(animal) {
     totalAnimals: animals.length,
     touchesToAdvance,
     hitZones: animal.hitZones,
+    tigerState,
     isInButtHitArea(normalizedX, normalizedY) {
+      if (animal.special === "tiger" && tigerState && tigerState !== "back") {
+        return true;
+      }
+
       return animal.hitZones.some((zone) => {
         const dx = (normalizedX - zone.x) / zone.rx;
         const dy = (normalizedY - zone.y) / zone.ry;
