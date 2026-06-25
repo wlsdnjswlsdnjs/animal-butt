@@ -176,6 +176,7 @@ const tigerPrompts = {
   glare: "You were warned.",
   roar: "ROAR.",
 };
+const tigerLookBackDuration = 700;
 const imageCache = new Map();
 
 setStatus("booting");
@@ -194,6 +195,8 @@ let isChangingAnimal = false;
 let pendingAdvance = false;
 let remainingAnimalIndices = [];
 let tigerState = "";
+let tigerResetTimer = 0;
+let tigerReactionVersion = 0;
 
 await app.init({
   autoDensity: true,
@@ -290,6 +293,8 @@ async function loadAnimalByIndex(nextIndex) {
   delete stageElement.dataset.tigerState;
   stageElement.classList.remove("is-tiger-lunge");
   stageElement.setAttribute("aria-label", nextAnimal.alt);
+  clearTigerReset();
+  tigerReactionVersion += 1;
 
   const image = await loadImage(nextAnimal.image);
   const nextTexture = Texture.from(image);
@@ -410,7 +415,7 @@ function getLocalPoint(clientX, clientY) {
 function isInButtHitArea(localX, localY) {
   const animal = animals[currentAnimalIndex];
 
-  if (animal?.special === "tiger" && tigerState && tigerState !== "back") {
+  if (animal?.special === "tiger" && tigerState === "roar") {
     return true;
   }
 
@@ -449,33 +454,39 @@ async function advanceAnimal() {
 }
 
 async function handleTigerTouch() {
-  if (touchCount === 1) {
-    await setTigerReaction("glare");
-    return;
-  }
-
   if (touchCount >= 5) {
     pendingAdvance = true;
     await setTigerReaction("roar");
     window.setTimeout(advanceAnimal, 1500);
+    return;
   }
+
+  await setTigerReaction("glare", { autoReset: true, allowRepeat: true });
 }
 
-async function setTigerReaction(nextState) {
+async function setTigerReaction(nextState, options = {}) {
   const animal = getCurrentAnimal();
+  const { autoReset = false, allowRepeat = false } = options;
 
-  if (animal?.special !== "tiger" || tigerState === nextState) return;
+  if (animal?.special !== "tiger" || (tigerState === nextState && !allowRepeat)) return;
 
-  const nextImage = animal.reactions?.[nextState];
+  const nextImage = nextState === "back" ? animal.image : animal.reactions?.[nextState];
   if (!nextImage) return;
 
+  clearTigerReset();
+  const reactionVersion = tigerReactionVersion + 1;
+  tigerReactionVersion = reactionVersion;
   tigerState = nextState;
   stageElement.dataset.tigerState = tigerState;
   updatePrompt(animal);
 
   const image = await loadImage(nextImage);
 
-  if (getCurrentAnimal()?.special !== "tiger" || tigerState !== nextState) {
+  if (
+    getCurrentAnimal()?.special !== "tiger" ||
+    tigerState !== nextState ||
+    tigerReactionVersion !== reactionVersion
+  ) {
     return;
   }
 
@@ -488,10 +499,22 @@ async function setTigerReaction(nextState) {
   setDebugAnimal(animal);
   setStatus(`tiger-${nextState}`);
 
+  if (nextState === "back") {
+    stageElement.classList.remove("is-tiger-lunge");
+  }
+
   if (nextState === "roar") {
     stageElement.classList.remove("is-tiger-lunge");
     void stageElement.offsetWidth;
     stageElement.classList.add("is-tiger-lunge");
+  }
+
+  if (autoReset) {
+    tigerResetTimer = window.setTimeout(() => {
+      if (tigerReactionVersion === reactionVersion && getCurrentAnimal()?.special === "tiger") {
+        setTigerReaction("back");
+      }
+    }, tigerLookBackDuration);
   }
 }
 
@@ -523,6 +546,13 @@ function getCurrentAnimal() {
   return animals[currentAnimalIndex];
 }
 
+function clearTigerReset() {
+  if (!tigerResetTimer) return;
+
+  window.clearTimeout(tigerResetTimer);
+  tigerResetTimer = 0;
+}
+
 function updatePrompt(animal = getCurrentAnimal()) {
   if (!promptElement) return;
 
@@ -545,7 +575,7 @@ function setDebugAnimal(animal) {
     hitZones: animal.hitZones,
     tigerState,
     isInButtHitArea(normalizedX, normalizedY) {
-      if (animal.special === "tiger" && tigerState && tigerState !== "back") {
+      if (animal.special === "tiger" && tigerState === "roar") {
         return true;
       }
 
