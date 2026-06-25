@@ -21,18 +21,15 @@ const animals = [
     image: "/assets/animals/corgi/base.png",
     alt: "Corgi from behind",
     hitZones: [
-      { x: 0.4, y: 0.62, rx: 0.145, ry: 0.13 },
-      { x: 0.6, y: 0.62, rx: 0.145, ry: 0.13 },
+      { x: 0.4, y: 0.62, rx: 0.16, ry: 0.15 },
+      { x: 0.6, y: 0.62, rx: 0.16, ry: 0.15 },
     ],
   },
   {
     id: "cat",
     image: "/assets/animals/cat/base.png",
     alt: "Cat from behind",
-    hitZones: [
-      { x: 0.39, y: 0.63, rx: 0.15, ry: 0.13 },
-      { x: 0.61, y: 0.63, rx: 0.15, ry: 0.13 },
-    ],
+    hitZones: [{ x: 0.5, y: 0.66, rx: 0.24, ry: 0.2 }],
   },
   {
     id: "rabbit",
@@ -84,6 +81,72 @@ const animals = [
     hitZones: [
       { x: 0.41, y: 0.6, rx: 0.105, ry: 0.115 },
       { x: 0.59, y: 0.6, rx: 0.105, ry: 0.115 },
+    ],
+  },
+  {
+    id: "red-panda",
+    image: "/assets/animals/red-panda/base.png",
+    alt: "Red panda from behind",
+    hitZones: [{ x: 0.5, y: 0.55, rx: 0.26, ry: 0.2 }],
+  },
+  {
+    id: "alpaca",
+    image: "/assets/animals/alpaca/base.png",
+    alt: "Alpaca from behind",
+    hitZones: [
+      { x: 0.42, y: 0.62, rx: 0.14, ry: 0.16 },
+      { x: 0.58, y: 0.62, rx: 0.14, ry: 0.16 },
+    ],
+  },
+  {
+    id: "koala",
+    image: "/assets/animals/koala/base.png",
+    alt: "Koala from behind",
+    hitZones: [{ x: 0.5, y: 0.68, rx: 0.25, ry: 0.18 }],
+  },
+  {
+    id: "wombat",
+    image: "/assets/animals/wombat/base.png",
+    alt: "Wombat from behind",
+    hitZones: [{ x: 0.5, y: 0.64, rx: 0.29, ry: 0.2 }],
+  },
+  {
+    id: "meerkat",
+    image: "/assets/animals/meerkat/base.png",
+    alt: "Meerkat from behind",
+    hitZones: [{ x: 0.5, y: 0.66, rx: 0.12, ry: 0.13 }],
+  },
+  {
+    id: "raccoon",
+    image: "/assets/animals/raccoon/base.png",
+    alt: "Raccoon from behind",
+    hitZones: [{ x: 0.5, y: 0.6, rx: 0.24, ry: 0.19 }],
+  },
+  {
+    id: "skunk",
+    image: "/assets/animals/skunk/base.png",
+    alt: "Skunk from behind",
+    hitZones: [
+      { x: 0.42, y: 0.68, rx: 0.13, ry: 0.14 },
+      { x: 0.58, y: 0.68, rx: 0.13, ry: 0.14 },
+    ],
+  },
+  {
+    id: "gorilla",
+    image: "/assets/animals/gorilla/base.png",
+    alt: "Gorilla from behind",
+    hitZones: [
+      { x: 0.42, y: 0.69, rx: 0.18, ry: 0.17 },
+      { x: 0.58, y: 0.69, rx: 0.18, ry: 0.17 },
+    ],
+  },
+  {
+    id: "hippo-calf",
+    image: "/assets/animals/hippo-calf/base.png",
+    alt: "Baby hippo from behind",
+    hitZones: [
+      { x: 0.42, y: 0.62, rx: 0.17, ry: 0.17 },
+      { x: 0.58, y: 0.62, rx: 0.17, ry: 0.17 },
     ],
   },
 ];
