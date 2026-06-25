@@ -5,21 +5,24 @@ const animals = [
     id: "capybara-real",
     image: "/assets/animals/capybara-real/base.png",
     alt: "Capybara from behind",
-    hitZones: [{ x: 0.5, y: 0.64, rx: 0.33, ry: 0.29 }],
+    hitZones: [
+      { x: 0.4, y: 0.59, rx: 0.18, ry: 0.16 },
+      { x: 0.6, y: 0.59, rx: 0.18, ry: 0.16 },
+    ],
   },
   {
     id: "panda",
     image: "/assets/animals/panda/base.png",
     alt: "Panda from behind",
-    hitZones: [{ x: 0.5, y: 0.7, rx: 0.31, ry: 0.25 }],
+    hitZones: [{ x: 0.5, y: 0.7, rx: 0.29, ry: 0.22 }],
   },
   {
     id: "corgi",
     image: "/assets/animals/corgi/base.png",
     alt: "Corgi from behind",
     hitZones: [
-      { x: 0.39, y: 0.67, rx: 0.19, ry: 0.24 },
-      { x: 0.61, y: 0.67, rx: 0.19, ry: 0.24 },
+      { x: 0.4, y: 0.62, rx: 0.145, ry: 0.13 },
+      { x: 0.6, y: 0.62, rx: 0.145, ry: 0.13 },
     ],
   },
   {
@@ -27,8 +30,8 @@ const animals = [
     image: "/assets/animals/cat/base.png",
     alt: "Cat from behind",
     hitZones: [
-      { x: 0.38, y: 0.67, rx: 0.2, ry: 0.25 },
-      { x: 0.62, y: 0.67, rx: 0.2, ry: 0.25 },
+      { x: 0.39, y: 0.63, rx: 0.15, ry: 0.13 },
+      { x: 0.61, y: 0.63, rx: 0.15, ry: 0.13 },
     ],
   },
   {
@@ -36,55 +39,59 @@ const animals = [
     image: "/assets/animals/rabbit/base.png",
     alt: "Rabbit from behind",
     hitZones: [
-      { x: 0.39, y: 0.68, rx: 0.2, ry: 0.28 },
-      { x: 0.61, y: 0.68, rx: 0.2, ry: 0.28 },
-      { x: 0.5, y: 0.81, rx: 0.15, ry: 0.12 },
+      { x: 0.39, y: 0.67, rx: 0.18, ry: 0.24 },
+      { x: 0.61, y: 0.67, rx: 0.18, ry: 0.24 },
+      { x: 0.5, y: 0.8, rx: 0.13, ry: 0.1 },
     ],
   },
   {
     id: "hamster",
     image: "/assets/animals/hamster/base.png",
     alt: "Hamster from behind",
-    hitZones: [{ x: 0.5, y: 0.66, rx: 0.29, ry: 0.28 }],
+    hitZones: [{ x: 0.5, y: 0.66, rx: 0.27, ry: 0.24 }],
   },
   {
     id: "guinea-pig",
     image: "/assets/animals/guinea-pig/base.png",
     alt: "Guinea pig from behind",
-    hitZones: [{ x: 0.5, y: 0.66, rx: 0.3, ry: 0.26 }],
+    hitZones: [{ x: 0.5, y: 0.66, rx: 0.28, ry: 0.23 }],
   },
   {
     id: "lamb",
     image: "/assets/animals/lamb/base.png",
     alt: "Lamb from behind",
-    hitZones: [{ x: 0.5, y: 0.63, rx: 0.28, ry: 0.27 }],
+    hitZones: [
+      { x: 0.4, y: 0.59, rx: 0.145, ry: 0.14 },
+      { x: 0.6, y: 0.59, rx: 0.145, ry: 0.14 },
+    ],
   },
   {
     id: "duck",
     image: "/assets/animals/duck/base.png",
     alt: "Duck from behind",
-    hitZones: [{ x: 0.5, y: 0.66, rx: 0.25, ry: 0.22 }],
+    hitZones: [{ x: 0.5, y: 0.65, rx: 0.22, ry: 0.18 }],
   },
   {
     id: "penguin",
     image: "/assets/animals/penguin/base.png",
     alt: "Penguin from behind",
-    hitZones: [{ x: 0.5, y: 0.67, rx: 0.24, ry: 0.25 }],
+    hitZones: [{ x: 0.5, y: 0.66, rx: 0.21, ry: 0.2 }],
   },
   {
     id: "shiba-inu",
     image: "/assets/animals/shiba-inu/base.png",
     alt: "Shiba Inu from behind",
     hitZones: [
-      { x: 0.41, y: 0.64, rx: 0.14, ry: 0.22 },
-      { x: 0.59, y: 0.64, rx: 0.14, ry: 0.22 },
+      { x: 0.41, y: 0.6, rx: 0.105, ry: 0.115 },
+      { x: 0.59, y: 0.6, rx: 0.105, ry: 0.115 },
     ],
   },
 ];
 
+const firstAnimalId = "shiba-inu";
 const stageElement = document.querySelector(".stage");
 const app = new Application();
-const touchesToAdvance = 10;
+const touchesToAdvance = 20;
 const imageCache = new Map();
 
 setStatus("booting");
@@ -101,7 +108,7 @@ let currentAnimalIndex = -1;
 let touchCount = 0;
 let isChangingAnimal = false;
 let pendingAdvance = false;
-let remainingAnimalIndices = shuffleIndices();
+let remainingAnimalIndices = [];
 
 await app.init({
   autoDensity: true,
@@ -115,7 +122,8 @@ await app.init({
 setStatus("pixi-ready");
 stageElement.appendChild(app.canvas);
 
-const firstAnimal = await loadNextAnimal();
+const firstAnimal = await loadAnimalByIndex(getAnimalIndexById(firstAnimalId));
+remainingAnimalIndices = shuffleIndices().filter((index) => index !== currentAnimalIndex);
 setStatus("texture-ready");
 
 plane = new MeshPlane({
@@ -177,6 +185,16 @@ function shuffleIndices() {
 
 async function loadNextAnimal() {
   const nextIndex = pickAnimalIndex();
+  return loadAnimalByIndex(nextIndex);
+}
+
+function getAnimalIndexById(id) {
+  const index = animals.findIndex((animal) => animal.id === id);
+
+  return index === -1 ? 0 : index;
+}
+
+async function loadAnimalByIndex(nextIndex) {
   const nextAnimal = animals[nextIndex];
 
   isChangingAnimal = true;
@@ -258,9 +276,9 @@ function handlePress(event) {
     x: point.x,
     y: point.y,
     age: 0,
-    duration: 0.76,
-    radius: texture.width * 0.22,
-    strength: texture.width * 0.034,
+    duration: 0.84,
+    radius: texture.width * 0.26,
+    strength: texture.width * 0.064,
   });
   touchCount += 1;
   stageElement.dataset.lastHit = "butt";
@@ -379,7 +397,7 @@ function setDebugAnimal(animal) {
 
 function applyImpulse(impulse) {
   const progress = impulse.age / impulse.duration;
-  const amplitude = Math.exp(-5.2 * progress) * Math.cos(progress * Math.PI * 5.2);
+  const amplitude = Math.exp(-4.7 * progress) * Math.cos(progress * Math.PI * 5.4);
 
   if (Math.abs(amplitude) < 0.006) {
     return;
@@ -406,7 +424,7 @@ function applyImpulse(impulse) {
     const directionalY = dy / radius;
     const power = impulse.strength * eased * amplitude;
 
-    positions[i] += directionalX * power * 0.95;
-    positions[i + 1] += (-directionalY * power * 0.22) + power * 0.14;
+    positions[i] += directionalX * power * 1.08;
+    positions[i + 1] += (-directionalY * power * 0.3) + power * 0.18;
   }
 }
