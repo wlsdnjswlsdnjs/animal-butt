@@ -5,51 +5,71 @@ const animals = [
     id: "capybara-real",
     image: "/assets/animals/capybara-real/base.png",
     alt: "Capybara from behind",
+    hitZones: [{ x: 0.5, y: 0.64, rx: 0.33, ry: 0.29 }],
   },
   {
     id: "panda",
     image: "/assets/animals/panda/base.png",
     alt: "Panda from behind",
+    hitZones: [{ x: 0.5, y: 0.7, rx: 0.31, ry: 0.25 }],
   },
   {
     id: "corgi",
     image: "/assets/animals/corgi/base.png",
     alt: "Corgi from behind",
+    hitZones: [
+      { x: 0.39, y: 0.67, rx: 0.19, ry: 0.24 },
+      { x: 0.61, y: 0.67, rx: 0.19, ry: 0.24 },
+    ],
   },
   {
     id: "cat",
     image: "/assets/animals/cat/base.png",
     alt: "Cat from behind",
+    hitZones: [
+      { x: 0.38, y: 0.67, rx: 0.2, ry: 0.25 },
+      { x: 0.62, y: 0.67, rx: 0.2, ry: 0.25 },
+    ],
   },
   {
     id: "rabbit",
     image: "/assets/animals/rabbit/base.png",
     alt: "Rabbit from behind",
+    hitZones: [
+      { x: 0.39, y: 0.68, rx: 0.2, ry: 0.28 },
+      { x: 0.61, y: 0.68, rx: 0.2, ry: 0.28 },
+      { x: 0.5, y: 0.81, rx: 0.15, ry: 0.12 },
+    ],
   },
   {
     id: "hamster",
     image: "/assets/animals/hamster/base.png",
     alt: "Hamster from behind",
+    hitZones: [{ x: 0.5, y: 0.66, rx: 0.29, ry: 0.28 }],
   },
   {
     id: "guinea-pig",
     image: "/assets/animals/guinea-pig/base.png",
     alt: "Guinea pig from behind",
+    hitZones: [{ x: 0.5, y: 0.66, rx: 0.3, ry: 0.26 }],
   },
   {
     id: "lamb",
     image: "/assets/animals/lamb/base.png",
     alt: "Lamb from behind",
+    hitZones: [{ x: 0.5, y: 0.63, rx: 0.28, ry: 0.27 }],
   },
   {
     id: "duck",
     image: "/assets/animals/duck/base.png",
     alt: "Duck from behind",
+    hitZones: [{ x: 0.5, y: 0.66, rx: 0.25, ry: 0.22 }],
   },
   {
     id: "penguin",
     image: "/assets/animals/penguin/base.png",
     alt: "Penguin from behind",
+    hitZones: [{ x: 0.5, y: 0.67, rx: 0.24, ry: 0.25 }],
   },
 ];
 
@@ -105,6 +125,8 @@ basePositions = new Float32Array(positions);
 resizeImage();
 window.addEventListener("resize", resizeImage);
 app.canvas.addEventListener("pointerdown", handlePress, { passive: true });
+app.canvas.addEventListener("pointermove", updateCursor, { passive: true });
+app.canvas.addEventListener("pointerleave", resetCursor, { passive: true });
 app.ticker.add(tick);
 
 setStatus("ready");
@@ -152,6 +174,7 @@ async function loadNextAnimal() {
   setStatus("loading-image");
   stageElement.dataset.animal = nextAnimal.id;
   stageElement.dataset.touches = "0";
+  stageElement.dataset.lastHit = "";
   stageElement.setAttribute("aria-label", nextAnimal.alt);
 
   const image = await loadImage(nextAnimal.image);
@@ -215,25 +238,23 @@ function resizeImage() {
 function handlePress(event) {
   if (isChangingAnimal) return;
 
-  const rect = app.canvas.getBoundingClientRect();
-  const canvasX = event.clientX - rect.left;
-  const canvasY = event.clientY - rect.top;
-  const localX = (canvasX - imageBounds.x) / imageScale;
-  const localY = (canvasY - imageBounds.y) / imageScale;
+  const point = getLocalPoint(event.clientX, event.clientY);
 
-  if (localX < 0 || localY < 0 || localX > texture.width || localY > texture.height) {
+  if (!point || !isInButtHitArea(point.x, point.y)) {
+    stageElement.dataset.lastHit = "miss";
     return;
   }
 
   impulses.push({
-    x: localX,
-    y: localY,
+    x: point.x,
+    y: point.y,
     age: 0,
     duration: 0.76,
     radius: texture.width * 0.22,
     strength: texture.width * 0.034,
   });
   touchCount += 1;
+  stageElement.dataset.lastHit = "butt";
   stageElement.dataset.touches = String(touchCount);
   stageElement.dataset.impulses = String(impulses.length);
 
@@ -241,6 +262,43 @@ function handlePress(event) {
     pendingAdvance = true;
     window.setTimeout(advanceAnimal, 180);
   }
+}
+
+function getLocalPoint(clientX, clientY) {
+  const rect = app.canvas.getBoundingClientRect();
+  const canvasX = clientX - rect.left;
+  const canvasY = clientY - rect.top;
+  const localX = (canvasX - imageBounds.x) / imageScale;
+  const localY = (canvasY - imageBounds.y) / imageScale;
+
+  if (localX < 0 || localY < 0 || localX > texture.width || localY > texture.height) {
+    return null;
+  }
+
+  return { x: localX, y: localY };
+}
+
+function isInButtHitArea(localX, localY) {
+  const animal = animals[currentAnimalIndex];
+  const zones = animal?.hitZones || [];
+  const normalizedX = localX / texture.width;
+  const normalizedY = localY / texture.height;
+
+  return zones.some((zone) => {
+    const dx = (normalizedX - zone.x) / zone.rx;
+    const dy = (normalizedY - zone.y) / zone.ry;
+
+    return dx * dx + dy * dy <= 1;
+  });
+}
+
+function updateCursor(event) {
+  const point = getLocalPoint(event.clientX, event.clientY);
+  app.canvas.style.cursor = point && isInButtHitArea(point.x, point.y) ? "pointer" : "default";
+}
+
+function resetCursor() {
+  app.canvas.style.cursor = "default";
 }
 
 async function advanceAnimal() {
@@ -286,11 +344,26 @@ function setDebugAnimal(animal) {
     animal: animal.id,
     totalAnimals: animals.length,
     touchesToAdvance,
+    hitZones: animal.hitZones,
+    isInButtHitArea(normalizedX, normalizedY) {
+      return animal.hitZones.some((zone) => {
+        const dx = (normalizedX - zone.x) / zone.rx;
+        const dy = (normalizedY - zone.y) / zone.ry;
+
+        return dx * dx + dy * dy <= 1;
+      });
+    },
     get touchCount() {
       return touchCount;
     },
     get activeImpulses() {
       return impulses.length;
+    },
+    get imageBounds() {
+      return { ...imageBounds };
+    },
+    get imageScale() {
+      return imageScale;
     },
   };
 }
