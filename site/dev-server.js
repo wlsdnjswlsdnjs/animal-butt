@@ -49,6 +49,23 @@ function openBrowser(url) {
 }
 
 const server = createServer(async (request, response) => {
+  const requestPath = new URL(request.url, `http://${host}:${port}`).pathname;
+
+  if (requestPath === "/_vercel/insights/script.js") {
+    response.writeHead(200, {
+      "cache-control": "no-store",
+      "content-type": "text/javascript; charset=utf-8",
+    });
+    response.end("");
+    return;
+  }
+
+  if (requestPath.startsWith("/_vercel/insights/")) {
+    response.writeHead(204);
+    response.end();
+    return;
+  }
+
   const filePath = toFilePath(request.url);
 
   if (!filePath || !existsSync(filePath)) {
